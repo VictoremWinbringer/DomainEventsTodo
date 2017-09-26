@@ -6,20 +6,21 @@ namespace DomainEventsTodo.Domain
     public abstract class BaseEvent
     {
         public DateTime DateOccurred { get; } = DateTime.UtcNow;
+
     }
 
     public class TodoComplete : BaseEvent
     {
-        public TodoComplete(string description)
+        public TodoComplete(TodoMemento memento)
         {
-            this.Description = description;
+            this.Memento = memento;
         }
-        public string Description { get; }
+        public TodoMemento Memento { get; }
     }
 
     public abstract class BaseModel<T> where T : BaseMemento
     {
-        protected Guid Id { get; set; }
+        public Guid Id { get; protected set; }
 
         public abstract T Memento { get; }
 
@@ -71,7 +72,7 @@ namespace DomainEventsTodo.Domain
         {
             this.IsComplete = true;
 
-            InternalEvents.Add(new TodoComplete(this.Description));
+            InternalEvents.Add(new TodoComplete(this.Memento));
         }
     }
 }

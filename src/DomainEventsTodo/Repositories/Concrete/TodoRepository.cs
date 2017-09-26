@@ -18,7 +18,7 @@ namespace DomainEventsTodo.Repositories.Concrete
         }
         public IEnumerator<Todo> GetEnumerator()
         {
-            RowSet rows = _session.Execute("select id,description,iscomplete from todos;");
+            RowSet rows = _session.Execute("select id, description, iscomplete from todos;");
 
             foreach (Row row in rows)
                 yield return Create(row);
@@ -29,29 +29,7 @@ namespace DomainEventsTodo.Repositories.Concrete
             return GetEnumerator();
         }
 
-        public Todo this[Guid id]
-        {
-            get { return Get(id); }
-            set
-            {
-                var todo = Get(id);
-
-                var memento = value.Memento;
-
-                if (todo == null)
-                {
-                    Execute(
-                        "insert into todos (id, description, iscomplete) values (?,?,?);"
-                        , id, memento.Description, memento.IsComplete);
-                }
-                else
-                {
-                    Execute(
-                        "update todos set iscomplete =?, description =? where id =?;"
-                        , memento.IsComplete, memento.Description, id);
-                }
-            }
-        }
+        public Todo this[Guid id] => Get(id);
 
         private Todo Create(Row row)
         {
@@ -86,6 +64,24 @@ namespace DomainEventsTodo.Repositories.Concrete
         public void Remove(Guid id)
         {
             Execute("delete from todos where id =?;", id);
+        }
+
+        public void Replace(Todo todo)
+        {
+            var memento = todo.Memento;
+
+            Execute(
+                "update todos set iscomplete =?, description =? where id =?;"/* IF EXISTS;" */
+                , memento.IsComplete, memento.Description, memento.Id);
+        }
+
+        public void Add(Todo todo)
+        {
+            var memento = todo.Memento;
+
+            Execute(
+                "insert into todos (id, description, iscomplete) values (?,?,?);"
+                , memento.Id, memento.Description, memento.IsComplete);
         }
     }
 }
