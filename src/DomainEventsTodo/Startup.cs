@@ -23,6 +23,8 @@ namespace DomainEventsTodo
         {
             services.AddMvc();
 
+            services.AddSignalR();
+
             var keySpace = Configuration["KeySpace"];
             var table = Configuration["Table"];
             var address = Configuration["Address"];
@@ -61,6 +63,8 @@ namespace DomainEventsTodo
             }
 
             app.UseMvc();
+
+            app.UseSignalR(b => b.MapHub<Notifier>("hub"));
         }
     }
 }

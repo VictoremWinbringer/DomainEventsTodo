@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace DomainEventsTodo.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     [ValidateModel]
     public class TodoController : Controller
     {
