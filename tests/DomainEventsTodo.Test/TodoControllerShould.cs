@@ -44,6 +44,193 @@ namespace DomainEventsTodo.Test
 
             _root = "api/v1/todo/";
         }
+        
+
+        [Fact]
+        public async Task Crud()
+        {
+            await Create();
+            await ReadAll();
+            await Read();
+            await Update();
+            await Delete();
+        }
+
+        [Fact]
+        public async Task Count_Equal_1()
+        {
+            _mementoes.Clear();
+
+            _mementoes.Add(new TodoMemento());
+
+            var response = await _client.GetAsync(_root + "count");
+
+            response.EnsureSuccessStatusCode();
+
+            var result = int.Parse(await response.Content.ReadAsStringAsync());
+
+            Assert.Equal(1, result);
+        }
+
+        [Fact]
+        public async Task Not_Create_Duplicate_Description()
+        {
+            var todo = new TodoVm
+            {
+                Description = "Ololosh"
+            };
+
+            _mementoes.Clear();
+
+            _mementoes.Add(new TodoMemento() { Description = todo.Description });
+
+
+            var result = await _client.PostAsync(_root, CreateContent(todo));
+
+            Assert.NotEqual(true, result.IsSuccessStatusCode);
+        }
+
+        [Fact]
+        public async Task Not_Create_Too_Short_Description()
+        {
+            var todo = new TodoVm
+            {
+                Description = "O"
+            };
+
+            var response = await _client.PostAsync(_root, CreateContent(todo));
+
+            Assert.NotEqual(true, response.IsSuccessStatusCode);
+        }
+
+        [Fact]
+        public async Task Not_Create_Empty_Description()
+        {
+            var todo = new TodoVm
+            {
+                Description = "       "
+            };
+
+            var response = await _client.PostAsync(_root, CreateContent(todo));
+
+            Assert.NotEqual(true, response.IsSuccessStatusCode);
+        }
+
+        [Fact]
+        public async Task Not_Create_Nul_Description()
+        {
+            var todo = new TodoVm
+            {
+                Description = null
+            };
+
+            var response = await _client.PostAsync(_root, CreateContent(todo));
+
+            Assert.NotEqual(true, response.IsSuccessStatusCode);
+        }
+
+
+        [Fact]
+        public async Task MakeComplete()
+        {
+            var todo = new TodoVm
+            {
+                Description = "MakeComplete"
+            };
+
+            var url = "http://localhost:8888/";
+
+            var server = WebHost.CreateDefaultBuilder()
+                .UseStartup<Startup>()
+                .UseUrls(url)
+                .Build();
+
+            Task.Run(() =>
+            {
+                server.Start();
+            });
+
+            var connection = new HubConnectionBuilder()
+                .WithUrl("http://localhost:8888/hub")
+                .WithConsoleLogger()
+                .Build();
+
+            connection.On<string>("Notify", data =>
+            {
+                Assert.Equal(todo.Description + " is complete", data);
+            });
+
+            await connection.StartAsync();
+
+            var client = new HttpClient();
+
+            client.BaseAddress = new Uri(url);
+
+            client.DefaultRequestHeaders.Clear();
+            client.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
+
+            var create = await client.PostAsync(_root, CreateContent(todo));
+
+            create.EnsureSuccessStatusCode();
+
+            var id = (await FromContent(create.Content)).Id;
+
+            var response = await client.PostAsync(_root + id + "/MakeComplete", new StringContent(""));
+
+            response.EnsureSuccessStatusCode();
+
+            var result = await Get(id, client);
+
+            Assert.Equal(id, result.Id);
+            Assert.Equal(todo.Description, result.Description);
+            Assert.Equal(true, result.IsComplete);
+
+            await client.DeleteAsync(_root + id);
+
+        }
+
+        [Fact]
+        public async Task Get_Not_Accept_Default_Id()
+        {
+            var result = await _client.GetAsync(_root + default(Guid));
+
+            Assert.True(!result.IsSuccessStatusCode);
+        }
+
+        [Fact]
+        public async Task Delete_Not_Accept_Default_Id()
+        {
+            var result = await _client.DeleteAsync(_root + default(Guid));
+
+            Assert.True(!result.IsSuccessStatusCode);
+        }
+
+        [Fact]
+        public async Task Put_Not_Accept_Default_Id()
+        {
+            var result = await _client.PutAsync(_root + default(Guid), CreateContent(_todo));
+
+            Assert.True(!result.IsSuccessStatusCode);
+        }
+
+        [Fact]
+        public async Task MakeComplete_Not_Accept_Default_Id()
+        {
+            var result = await _client.PostAsync(_root + default(Guid) + "/MakeComplete", new StringContent(""));
+
+            Assert.True(!result.IsSuccessStatusCode);
+        }
+
+        public void Dispose()
+        {
+            _mementoes.Clear();
+            _client.Dispose();
+            _server.Dispose();
+        }
+
+
+        #region Private methods
 
         private void SetupRepo()
         {
@@ -93,7 +280,7 @@ namespace DomainEventsTodo.Test
         {
             return WebHost.CreateDefaultBuilder()
                 .UseStartup<TestStartup>()
-                .ConfigureServices(s=>s.AddScoped<ITodoRepository>(services => _repository.Object));
+                .ConfigureServices(s => s.AddScoped<ITodoRepository>(services => _repository.Object));
         }
 
         private HttpClient CreateClient(TestServer server)
@@ -145,100 +332,6 @@ namespace DomainEventsTodo.Test
             return await FromContent(response.Content);
         }
 
-        [Fact]
-        public async Task Crud()
-        {
-            await Create();
-            await ReadAll();
-            await Read();
-            await Update();
-            await Delete();
-        }
-
-        [Fact]
-        public async Task Count_Equal_1()
-        {
-            var todo = new TodoVm
-            {
-                Description = "One"
-            };
-
-            var response = await _client.PostAsync(_root, CreateContent(todo));
-
-            response.EnsureSuccessStatusCode();
-
-            var created = await FromContent(response.Content);
-
-            response = await _client.GetAsync(_root + "count");
-
-            response.EnsureSuccessStatusCode();
-
-            var result = int.Parse(await response.Content.ReadAsStringAsync());
-
-            await _client.DeleteAsync(_root + created.Id);
-            
-            Assert.Equal(1, result);
-        }
-
-        [Fact]
-        public async Task Not_Create_Duplicate_Description()
-        {
-            var todo = new TodoVm
-            {
-                Description = "Ololosh"
-            };
-
-            var response = await _client.PostAsync(_root, CreateContent(todo));
-
-            response.EnsureSuccessStatusCode();
-
-            var result = await FromContent(response.Content);
-
-            var duplicate = await _client.PostAsync(_root, CreateContent(todo));
-
-            await _client.DeleteAsync(_root + result.Id);
-
-            Assert.NotEqual(true, duplicate.IsSuccessStatusCode);
-        }
-
-        [Fact]
-        public async Task Not_Create_Too_Short_Description()
-        {
-            var todo = new TodoVm
-            {
-                Description = "O"
-            };
-
-            var response = await _client.PostAsync(_root, CreateContent(todo));
-
-            Assert.NotEqual(true, response.IsSuccessStatusCode);
-        }
-
-        [Fact]
-        public async Task Not_Create_Empty_Description()
-        {
-            var todo = new TodoVm
-            {
-                Description = "       "
-            };
-
-            var response = await _client.PostAsync(_root, CreateContent(todo));
-
-            Assert.NotEqual(true, response.IsSuccessStatusCode);
-        }
-
-        [Fact]
-        public async Task Not_Create_Nul_Description()
-        {
-            var todo = new TodoVm
-            {
-                Description = null
-            };
-
-            var response = await _client.PostAsync(_root, CreateContent(todo));
-
-            Assert.NotEqual(true, response.IsSuccessStatusCode);
-        }
 
         private async Task Create()
         {
@@ -293,119 +386,15 @@ namespace DomainEventsTodo.Test
             Assert.NotEqual(_todo.IsComplete, result.IsComplete);
         }
 
-
-        [Fact]
-        public async Task MakeComplete()
-        {
-            var todo = new TodoVm
-            {
-                Description = "MakeComplete"
-            };
-
-            var url = "http://localhost:8888/";
-
-            var server = WebHost.CreateDefaultBuilder()
-                .UseStartup<Startup>()
-                .UseUrls(url)
-                .Build();
-           
-            Task.Run(() =>
-            {
-                server.Start();
-            });
-
-            var connection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:8888/hub")
-                .WithConsoleLogger()
-                .Build();
-
-            connection.On<string>("Notify", data =>
-            {
-                Assert.Equal(todo.Description + " is complete", data);
-            });
-
-            await connection.StartAsync();
-
-            var client = new HttpClient();
-
-            client.BaseAddress = new Uri(url);
-
-            client.DefaultRequestHeaders.Clear();
-            client.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/json"));
-
-            var create = await client.PostAsync(_root, CreateContent(todo));
-
-            create.EnsureSuccessStatusCode();
-
-            var id = (await FromContent(create.Content)).Id;
-
-            var response = await client.PostAsync(_root + id + "/MakeComplete", new StringContent(""));
-
-            response.EnsureSuccessStatusCode();
-
-            var result = await Get(id, client);
-
-            Assert.Equal(id, result.Id);
-            Assert.Equal(todo.Description, result.Description);
-            Assert.Equal(true, result.IsComplete);
-
-            await client.DeleteAsync(_root + id);
-
-        }
-
         private async Task Delete()
         {
             var response = await _client.DeleteAsync(_root + _todo.Id);
 
             response.EnsureSuccessStatusCode();
 
-            var result = await _client.GetAsync(_root);
-
-            result.EnsureSuccessStatusCode();
-
-            var array = JsonConvert.DeserializeObject<TodoVm[]>(await result.Content.ReadAsStringAsync());
-
-            Assert.DoesNotContain(array, x => x.Id == _todo.Id);
+            Assert.DoesNotContain(_mementoes, x => x.Id == _todo.Id);
         }
 
-        [Fact]
-        public async Task Get_Not_Accept_Default_Id()
-        {
-            var result = await _client.GetAsync(_root + default(Guid));
-
-            Assert.True(!result.IsSuccessStatusCode);
-        }
-
-        [Fact]
-        public async Task Delete_Not_Accept_Default_Id()
-        {
-            var result = await _client.DeleteAsync(_root + default(Guid));
-
-            Assert.True(!result.IsSuccessStatusCode);
-        }
-
-        [Fact]
-        public async Task Put_Not_Accept_Default_Id()
-        {
-            var result = await _client.PutAsync(_root + default(Guid), CreateContent(_todo));
-
-            Assert.True(!result.IsSuccessStatusCode);
-        }
-
-        [Fact]
-        public async Task MakeComplete_Not_Accept_Default_Id()
-        {
-            var result = await _client.PostAsync(_root + default(Guid) + "/MakeComplete", new StringContent(""));
-
-            Assert.True(!result.IsSuccessStatusCode);
-        }
-
-        public void Dispose()
-        {
-            _mementoes.Clear();
-            _client.Dispose();
-            _server.Dispose();
-        }
+        #endregion
     }
 }
