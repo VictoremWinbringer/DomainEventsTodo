@@ -38,7 +38,7 @@ namespace DomainEventsTodo.Controllers
 
             _repository.Add(result);
 
-            return Ok(TodoVm.FromTodo(result));
+            return CreatedAtAction(nameof(TodoController.Get), new { id = result.Id }, TodoVm.FromTodo(result));
         }
 
         [HttpPut("{id}")]
@@ -50,7 +50,7 @@ namespace DomainEventsTodo.Controllers
 
             _repository.Replace(result);
 
-            return Ok();
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
