@@ -5,23 +5,23 @@ using DomainEventsTodo.Dispatchers.Concrete;
 using DomainEventsTodo.Domain;
 using DomainEventsTodo.Domain.Events;
 using DomainEventsTodo.Repositories.Abstract;
-using DomainEventsTodo.Repositories.Concrete;
 using DomainEventsTodo.SignalR;
 using DomainEventsTodo.Validators;
 using DomainEventsTodo.ViewModels;
 using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using FluentValidation.AspNetCore;
+using Moq;
 
 namespace DomainEventsTodo
 {
-    public class Startup
+    public class TestStartup
     {
-        public Startup(IConfiguration configuration)
+        public TestStartup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
@@ -38,35 +38,12 @@ namespace DomainEventsTodo
             services.AddTransient<IValidator<TodoPostPutVm>, TodoValidator>();
             services.AddTransient<IValidator<Guid>, GuidValidator>();
 
-            services.AddScoped<ITodoRepository, TodoRepository>();
+            services.AddScoped<ICluster>(s => new Mock<ICluster>().Object);
+            services.AddScoped<ISession>(s => new Mock<ISession>().Object);
 
             services.AddTransient<IDispatcher, DomainEventDispatcher>();
 
             services.AddTransient<IHandler<TodoComplete>, TodoCompleteService>();
-
-            var keySpace = Configuration["KeySpace"];
-            var table = Configuration["Table"];
-            var address = Configuration["Address"];
-
-            using (Cluster cluster = Cluster.Builder()
-                .AddContactPoint(address)
-                .WithDefaultKeyspace("main")
-                .Build())
-            using (ISession session = cluster.ConnectAndCreateDefaultKeyspaceIfNotExists())
-            {
-                session.Execute(
-                    $"create keyspace if not exists {keySpace} with replication ={{'class':'SimpleStrategy','replication_factor':3}};");
-
-                session.Execute($"use {keySpace}");
-
-                session.Execute(
-                    $"create table if not exists {table}(Id uuid primary key, Description text, IsComplete boolean );");
-            }
-
-            services.AddScoped<ICluster>(s => Cluster.Builder().AddContactPoint(address)
-                .Build());
-
-            services.AddScoped<ISession>(s => s.GetService<ICluster>().Connect(keySpace));
 
         }
 

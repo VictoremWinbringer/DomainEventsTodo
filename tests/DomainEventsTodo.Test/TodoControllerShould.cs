@@ -1,11 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
 using DomainEventsTodo.Domain;
+using DomainEventsTodo.Domain.Mementos;
 using DomainEventsTodo.Repositories.Abstract;
 using DomainEventsTodo.ViewModels;
 using Microsoft.AspNetCore;
@@ -15,6 +9,13 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace DomainEventsTodo.Test
@@ -27,6 +28,7 @@ namespace DomainEventsTodo.Test
         private readonly TestServer _server;
         private readonly List<TodoMemento> _mementoes = new List<TodoMemento>();
         private readonly Mock<ITodoRepository> _repository = new Mock<ITodoRepository>();
+
         public TodoControllerShould()
         {
             SetupRepo();
@@ -45,6 +47,8 @@ namespace DomainEventsTodo.Test
 
         private void SetupRepo()
         {
+            _mementoes.Clear();
+
             _repository.Setup(r => r[It.IsAny<Guid>()])
                 .Returns<Guid>(g =>
                 {
@@ -75,16 +79,21 @@ namespace DomainEventsTodo.Test
 
                 });
 
-            _repository.Setup(r => r.GetEnumerator())
-                .Returns(_mementoes.Select(m => new Todo(m)).ToList().GetEnumerator());
+            _repository.Setup(r => r.All())
+                .Returns(_mementoes.Select(m => new Todo(m)));
 
         }
 
         private TestServer CreateServer()
         {
-            return new TestServer(WebHost.CreateDefaultBuilder()
-                  .UseStartup<Startup>()
-                  .ConfigureServices(s => s.AddScoped<ITodoRepository>(services => _repository.Object)));
+            return new TestServer(CreateBuilder());
+        }
+
+        private IWebHostBuilder CreateBuilder()
+        {
+            return WebHost.CreateDefaultBuilder()
+                .UseStartup<TestStartup>()
+                .ConfigureServices(s=>s.AddScoped<ITodoRepository>(services => _repository.Object));
         }
 
         private HttpClient CreateClient(TestServer server)
@@ -166,9 +175,9 @@ namespace DomainEventsTodo.Test
 
             var result = int.Parse(await response.Content.ReadAsStringAsync());
 
-            Assert.Equal(1, result);
-
             await _client.DeleteAsync(_root + created.Id);
+            
+            Assert.Equal(1, result);
         }
 
         [Fact]
@@ -298,9 +307,8 @@ namespace DomainEventsTodo.Test
             var server = WebHost.CreateDefaultBuilder()
                 .UseStartup<Startup>()
                 .UseUrls(url)
-                .ConfigureServices(s => s.AddScoped<ITodoRepository>(services => _repository.Object))
                 .Build();
-
+           
             Task.Run(() =>
             {
                 server.Start();
@@ -370,11 +378,11 @@ namespace DomainEventsTodo.Test
         }
 
         [Fact]
-        public async Task Delete_Accept_Default_Id()
+        public async Task Delete_Not_Accept_Default_Id()
         {
             var result = await _client.DeleteAsync(_root + default(Guid));
 
-            result.EnsureSuccessStatusCode();
+            Assert.True(!result.IsSuccessStatusCode);
         }
 
         [Fact]
@@ -395,6 +403,7 @@ namespace DomainEventsTodo.Test
 
         public void Dispose()
         {
+            _mementoes.Clear();
             _client.Dispose();
             _server.Dispose();
         }

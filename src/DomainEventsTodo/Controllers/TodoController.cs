@@ -22,18 +22,13 @@ namespace DomainEventsTodo.Controllers
         [HttpGet]
         public IActionResult Get()
         {
-            return Ok(_repository.ToList());
+            return Ok(_repository.All().Select(TodoVm.FromTodo).ToList());
         }
 
         [HttpGet("{id}")]
         public IActionResult Get(Guid id)
         {
-            var todo = _repository[id];
-
-            if (todo == null)
-                return NotFound();
-
-            return Ok(TodoVm.FromTodo(todo));
+            return Ok(TodoVm.FromTodo(_repository[id]));
         }
 
         [HttpPost]
@@ -50,9 +45,6 @@ namespace DomainEventsTodo.Controllers
         public IActionResult Put(Guid id, [FromBody]TodoPostPutVm todo)
         {
             var result = _repository[id];
-
-            if (result == null)
-                return NotFound();
 
             result.Update(todo.Description);
 
@@ -72,16 +64,13 @@ namespace DomainEventsTodo.Controllers
         [HttpGet("[action]")]
         public IActionResult Count()
         {
-            return Ok(_repository.Count());
+            return Ok(_repository.All().Count());
         }
 
         [HttpPost("{id}/[action]")]
         public IActionResult MakeComplete(Guid id)
         {
             var result = _repository[id];
-
-            if (result == null)
-                return NotFound();
 
             result.MakeComplete();
 

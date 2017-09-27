@@ -1,45 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
+using DomainEventsTodo.Domain.Events;
+using DomainEventsTodo.Domain.Mementos;
 
 namespace DomainEventsTodo.Domain
 {
-    public abstract class BaseEvent
-    {
-        public DateTime DateOccurred { get; } = DateTime.UtcNow;
-
-    }
-
-    public class TodoComplete : BaseEvent
-    {
-        public TodoComplete(TodoMemento memento)
-        {
-            this.Memento = memento;
-        }
-        public TodoMemento Memento { get; }
-    }
-
-    public abstract class BaseModel<T> where T : BaseMemento
-    {
-        public Guid Id { get; protected set; }
-
-        public abstract T Memento { get; }
-
-        protected List<BaseEvent> InternalEvents { get; } = new List<BaseEvent>();
-
-        public IReadOnlyList<BaseEvent> Events => InternalEvents.AsReadOnly();
-    }
-    public abstract class BaseMemento
-    {
-        public Guid Id { get; set; }
-    }
-
-    public class TodoMemento : BaseMemento
-    {
-        public string Description { get; set; }
-        public bool IsComplete { get; set; } = false;
-    }
     public class Todo : BaseModel<TodoMemento>
     {
+        private string Description { get; set; }
+        private bool IsComplete { get; set; }
+
         public Todo(string description)
         {
             this.Id = Guid.NewGuid();
@@ -52,9 +21,6 @@ namespace DomainEventsTodo.Domain
             this.Description = memento.Description;
             this.IsComplete = memento.IsComplete;
         }
-
-        private string Description { get; set; }
-        private bool IsComplete { get; set; }
 
         public override TodoMemento Memento => new TodoMemento
         {

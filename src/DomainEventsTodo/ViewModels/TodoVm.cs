@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
 using DomainEventsTodo.Domain;
 
 namespace DomainEventsTodo.ViewModels
@@ -24,8 +23,6 @@ namespace DomainEventsTodo.ViewModels
 
     public class TodoPostPutVm
     {
-        [Required]
-        [StringLength(255, MinimumLength = 3)]
         public string Description { get; set; }
     }
 }
