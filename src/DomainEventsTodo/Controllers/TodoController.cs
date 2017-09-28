@@ -5,6 +5,7 @@ using DomainEventsTodo.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
+using DomainEventsTodo.Domain.Mementos;
 
 namespace DomainEventsTodo.Controllers
 {
@@ -22,29 +23,29 @@ namespace DomainEventsTodo.Controllers
         [HttpGet]
         public IActionResult Get()
         {
-            return Ok(_repository.All().Select(TodoVm.FromTodo).ToList());
+            return Ok(_repository.All().Select(TodoDisplayVm.FromTodo).ToList());
         }
 
         [HttpGet("{id}")]
-        public IActionResult Get(Guid id)
+        public IActionResult Get([FromRoute]TodoSearchVm todo)
         {
-            return Ok(TodoVm.FromTodo(_repository[id]));
+            return Ok(TodoDisplayVm.FromTodo(_repository[todo.Id]));
         }
 
         [HttpPost]
-        public IActionResult Post([FromBody]TodoPostPutVm todo)
+        public IActionResult Post([FromBody]TodoCreateVm todo)
         {
             var result = new Todo(todo.Description);
 
             _repository.Add(result);
 
-            return CreatedAtAction(nameof(TodoController.Get), new { id = result.Id }, TodoVm.FromTodo(result));
+            return CreatedAtAction(nameof(TodoController.Get), new { id = result.Id }, TodoDisplayVm.FromTodo(result));
         }
 
         [HttpPut("{id}")]
-        public IActionResult Put(Guid id, [FromBody]TodoPostPutVm todo)
+        public IActionResult Put([FromRoute]TodoSearchVm search, [FromBody]TodoUpdateVm todo)
         {
-            var result = _repository[id];
+            var result = _repository[search.Id];
 
             result.Update(todo.Description);
 
@@ -68,9 +69,9 @@ namespace DomainEventsTodo.Controllers
         }
 
         [HttpPost("{id}/[action]")]
-        public IActionResult MakeComplete(Guid id)
+        public IActionResult MakeComplete([FromRoute]TodoSearchVm todo)
         {
-            var result = _repository[id];
+            var result = _repository[todo.Id];
 
             result.MakeComplete();
 

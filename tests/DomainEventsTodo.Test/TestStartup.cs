@@ -1,10 +1,8 @@
-﻿using System;
-using Cassandra;
+﻿using Cassandra;
 using DomainEventsTodo.Dispatchers.Abstract;
 using DomainEventsTodo.Dispatchers.Concrete;
 using DomainEventsTodo.Domain;
 using DomainEventsTodo.Domain.Events;
-using DomainEventsTodo.Repositories.Abstract;
 using DomainEventsTodo.SignalR;
 using DomainEventsTodo.Validators;
 using DomainEventsTodo.ViewModels;
@@ -35,8 +33,8 @@ namespace DomainEventsTodo
 
             services.AddSignalR();
 
-            services.AddTransient<IValidator<TodoPostPutVm>, TodoValidator>();
-            services.AddTransient<IValidator<Guid>, GuidValidator>();
+            services.AddTransient<IValidator<TodoCreateVm>, TodoCreateValidator>();
+            services.AddTransient<IValidator<TodoSearchVm>, TodoSearchValidator>();
 
             services.AddScoped<ICluster>(s => new Mock<ICluster>().Object);
             services.AddScoped<ISession>(s => new Mock<ISession>().Object);

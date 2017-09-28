@@ -35,8 +35,9 @@ namespace DomainEventsTodo
 
             services.AddSignalR();
 
-            services.AddTransient<IValidator<TodoPostPutVm>, TodoValidator>();
-            services.AddTransient<IValidator<Guid>, GuidValidator>();
+            services.AddTransient<IValidator<TodoCreateVm>, TodoCreateValidator>();
+            services.AddTransient<IValidator<TodoUpdateVm>, TodoUpdateValidator>();
+            services.AddTransient<IValidator<TodoSearchVm>, TodoSearchValidator>();
 
             services.AddScoped<ITodoRepository, TodoRepository>();
 

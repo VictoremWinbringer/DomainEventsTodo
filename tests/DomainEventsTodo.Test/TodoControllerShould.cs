@@ -23,7 +23,7 @@ namespace DomainEventsTodo.Test
     public class TodoControllerShould : IDisposable
     {
         private readonly HttpClient _client;
-        private readonly TodoVm _todo;
+        private readonly TodoDisplayVm _todo;
         private readonly string _root;
         private readonly TestServer _server;
         private readonly List<TodoMemento> _mementoes = new List<TodoMemento>();
@@ -37,7 +37,7 @@ namespace DomainEventsTodo.Test
 
             _client = CreateClient(_server);
 
-            _todo = new TodoVm
+            _todo = new TodoDisplayVm
             {
                 Description = "Bla bla bla"
             };
@@ -75,7 +75,7 @@ namespace DomainEventsTodo.Test
         [Fact]
         public async Task Not_Create_Duplicate_Description()
         {
-            var todo = new TodoVm
+            var todo = new TodoDisplayVm
             {
                 Description = "Ololosh"
             };
@@ -93,7 +93,7 @@ namespace DomainEventsTodo.Test
         [Fact]
         public async Task Not_Create_Too_Short_Description()
         {
-            var todo = new TodoVm
+            var todo = new TodoDisplayVm
             {
                 Description = "O"
             };
@@ -106,7 +106,7 @@ namespace DomainEventsTodo.Test
         [Fact]
         public async Task Not_Create_Empty_Description()
         {
-            var todo = new TodoVm
+            var todo = new TodoDisplayVm
             {
                 Description = "       "
             };
@@ -119,7 +119,7 @@ namespace DomainEventsTodo.Test
         [Fact]
         public async Task Not_Create_Nul_Description()
         {
-            var todo = new TodoVm
+            var todo = new TodoDisplayVm
             {
                 Description = null
             };
@@ -133,7 +133,7 @@ namespace DomainEventsTodo.Test
         [Fact]
         public async Task MakeComplete()
         {
-            var todo = new TodoVm
+            var todo = new TodoDisplayVm
             {
                 Description = "MakeComplete"
             };
@@ -199,11 +199,11 @@ namespace DomainEventsTodo.Test
         }
 
         [Fact]
-        public async Task Delete_Not_Accept_Default_Id()
+        public async Task Delete_Accept_Default_Id()
         {
             var result = await _client.DeleteAsync(_root + default(Guid));
 
-            Assert.True(!result.IsSuccessStatusCode);
+            result.EnsureSuccessStatusCode();
         }
 
         [Fact]
@@ -294,27 +294,27 @@ namespace DomainEventsTodo.Test
             return client;
         }
 
-        private string ToJson(TodoVm todo)
+        private string ToJson(TodoDisplayVm todo)
         {
             return JsonConvert.SerializeObject(todo);
         }
 
-        private TodoVm FromJson(string todo)
+        private TodoDisplayVm FromJson(string todo)
         {
-            return JsonConvert.DeserializeObject<TodoVm>(todo);
+            return JsonConvert.DeserializeObject<TodoDisplayVm>(todo);
         }
 
-        private StringContent CreateContent(TodoVm todo)
+        private StringContent CreateContent(TodoDisplayVm todo)
         {
             return new StringContent(ToJson(todo), Encoding.UTF8, "application/json");
         }
 
-        private async Task<TodoVm> FromContent(HttpContent content)
+        private async Task<TodoDisplayVm> FromContent(HttpContent content)
         {
             return FromJson(await content.ReadAsStringAsync());
         }
 
-        private async Task<TodoVm> Get(Guid id, HttpClient client)
+        private async Task<TodoDisplayVm> Get(Guid id, HttpClient client)
         {
             var response = await client.GetAsync(_root + id);
 
@@ -323,7 +323,7 @@ namespace DomainEventsTodo.Test
             return await FromContent(response.Content);
         }
 
-        private async Task<TodoVm> Get(Guid id)
+        private async Task<TodoDisplayVm> Get(Guid id)
         {
             var response = await _client.GetAsync(_root + id);
 
@@ -355,7 +355,7 @@ namespace DomainEventsTodo.Test
 
             result.EnsureSuccessStatusCode();
 
-            var array = JsonConvert.DeserializeObject<TodoVm[]>(await result.Content.ReadAsStringAsync());
+            var array = JsonConvert.DeserializeObject<TodoDisplayVm[]>(await result.Content.ReadAsStringAsync());
 
             Assert.Contains(array, x => x.Id == _todo.Id);
 

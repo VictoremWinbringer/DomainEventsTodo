@@ -1,22 +1,24 @@
 ﻿using System;
+using DomainEventsTodo.Domain;
 using DomainEventsTodo.Repositories.Abstract;
+using DomainEventsTodo.ViewModels;
 using FluentValidation;
 
 namespace DomainEventsTodo.Validators
 {
-    public class GuidValidator : AbstractValidator<Guid>
+    public class TodoSearchValidator : AbstractValidator<TodoSearchVm>
     {
         private readonly ITodoRepository _repository;
 
-        public GuidValidator(ITodoRepository repository)
+        public TodoSearchValidator(ITodoRepository repository)
         {
             _repository = repository;
 
-            RuleFor(g => g).NotEmpty()
-                .WithMessage(string.Format(Properties.Resource.ResourceManager.GetString("IsNullOrEmpty"), nameof(Guid))); ;
+            RuleFor(s => s.Id).NotEmpty()
+                .WithMessage(string.Format(Properties.Resource.ResourceManager.GetString("IsNullOrEmpty"), nameof(TodoSearchVm.Id))); ;
 
-            RuleFor(g => g).Must(g => _repository[g] != null)
-                .WithMessage(string.Format(Properties.Resource.ResourceManager.GetString("NotFound"), "Todo")); ;
+            RuleFor(s => s.Id).Must(g => _repository[g] != null)
+                .WithMessage(string.Format(Properties.Resource.ResourceManager.GetString("NotFound"), nameof(Todo))); ;
         }
     }
 }
