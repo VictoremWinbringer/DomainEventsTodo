@@ -1,13 +1,13 @@
-﻿using DomainEventsTodo.Domain.Mementos;
-
+﻿
 namespace DomainEventsTodo.Domain.Events
 {
     public class TodoComplete : BaseEvent
     {
-        public TodoComplete(TodoMemento memento)
+        public TodoComplete(string description)
         {
-            this.Memento = memento;
+            Description = description;
         }
-        public TodoMemento Memento { get; }
+        
+        public string Description { get; }
     }
 }

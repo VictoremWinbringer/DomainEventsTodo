@@ -1,5 +1,4 @@
 using DomainEventsTodo.Domain;
-using DomainEventsTodo.Domain.Mementos;
 using DomainEventsTodo.Repositories.Abstract;
 using DomainEventsTodo.ViewModels;
 using Microsoft.AspNetCore;
@@ -26,7 +25,7 @@ namespace DomainEventsTodo.Test
         private readonly TodoDisplayVm _todo;
         private readonly string _root;
         private readonly TestServer _server;
-        private readonly List<TodoMemento> _mementoes = new List<TodoMemento>();
+        private readonly List<Todo> _mementoes = new List<Todo>();
         private readonly Mock<ITodoRepository> _repository = new Mock<ITodoRepository>();
 
         public TodoControllerShould()
@@ -61,7 +60,7 @@ namespace DomainEventsTodo.Test
         {
             _mementoes.Clear();
 
-            _mementoes.Add(new TodoMemento());
+            _mementoes.Add(new Todo(new Guid(),String.Empty, false));
 
             var response = await _client.GetAsync(_root + "count");
 
@@ -82,7 +81,7 @@ namespace DomainEventsTodo.Test
 
             _mementoes.Clear();
 
-            _mementoes.Add(new TodoMemento() { Description = todo.Description });
+            _mementoes.Add( new Todo(todo.Id,todo.Description,todo.IsComplete));
 
 
             var result = await _client.PostAsync(_root, CreateContent(todo));
@@ -243,18 +242,18 @@ namespace DomainEventsTodo.Test
 
                     if (todo == null)
                         return null;
-                    return new Todo(todo);
+                    return todo;
                 });
 
             _repository.Setup(r => r.Add(It.IsAny<Todo>()))
-                .Callback<Todo>(todo => _mementoes.Add(todo.Memento));
+                .Callback<Todo>(todo => _mementoes.Add(todo));
 
             _repository.Setup(r => r.Replace(It.IsAny<Todo>()))
                 .Callback<Todo>(todo =>
                 {
                     var index = _mementoes.FindIndex(m => m.Id == todo.Id);
 
-                    _mementoes[index] = todo.Memento;
+                    _mementoes[index] = todo;
                 });
 
             _repository.Setup(r => r.Remove(It.IsAny<Guid>()))
@@ -267,7 +266,7 @@ namespace DomainEventsTodo.Test
                 });
 
             _repository.Setup(r => r.All())
-                .Returns(_mementoes.Select(m => new Todo(m)));
+                .Returns(_mementoes);
 
         }
 

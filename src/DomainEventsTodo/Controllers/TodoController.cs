@@ -5,7 +5,6 @@ using DomainEventsTodo.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
-using DomainEventsTodo.Domain.Mementos;
 
 namespace DomainEventsTodo.Controllers
 {

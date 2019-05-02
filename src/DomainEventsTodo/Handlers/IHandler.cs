@@ -1,6 +1,6 @@
 ﻿using DomainEventsTodo.Domain.Events;
 
-namespace DomainEventsTodo.Domain
+namespace DomainEventsTodo.Handlers
 {
     public interface IHandler<T> where T : BaseEvent
     {

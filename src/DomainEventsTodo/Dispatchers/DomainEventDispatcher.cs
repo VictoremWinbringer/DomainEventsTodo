@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Linq;
-using DomainEventsTodo.Dispatchers.Abstract;
-using DomainEventsTodo.Domain;
 using DomainEventsTodo.Domain.Events;
+using DomainEventsTodo.Handlers;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DomainEventsTodo.Dispatchers.Concrete
+namespace DomainEventsTodo.Dispatchers
 {
     public class DomainEventDispatcher : IDispatcher
     {

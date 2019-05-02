@@ -1,44 +1,42 @@
 ﻿using System;
+using System.Collections.Generic;
 using DomainEventsTodo.Domain.Events;
-using DomainEventsTodo.Domain.Mementos;
 
 namespace DomainEventsTodo.Domain
 {
-    public class Todo : BaseModel<TodoMemento>
+    public class Todo 
     {
-        private string Description { get; set; }
-        private bool IsComplete { get; set; }
+        public Guid Id { get; private set; }
+
+        private readonly List<BaseEvent> _events = new List<BaseEvent>();
+
+        public IReadOnlyList<BaseEvent> Events => _events.AsReadOnly();
+        public string Description { get; private set; }
+        public bool IsComplete { get; private set; }
 
         public Todo(string description)
         {
-            this.Id = Guid.NewGuid();
-            this.Description = description;
+            Id = Guid.NewGuid();
+            Description = description;
         }
 
-        public Todo(TodoMemento memento)
+        public Todo(Guid id, string description, bool isComplete)
         {
-            this.Id = memento.Id;
-            this.Description = memento.Description;
-            this.IsComplete = memento.IsComplete;
+            Id = id;
+            Description = description;
+            IsComplete = isComplete;
         }
-
-        public override TodoMemento Memento => new TodoMemento
-        {
-            Id = this.Id,
-            Description = this.Description,
-            IsComplete = this.IsComplete
-        };
 
         public void Update(string description)
         {
-            this.Description = description;
+            Description = description;
         }
 
         public void MakeComplete()
         {
-            this.IsComplete = true;
+            IsComplete = true;
 
-            InternalEvents.Add(new TodoComplete(this.Memento));
+            _events.Add(new TodoComplete(Description));
         }
     }
 }

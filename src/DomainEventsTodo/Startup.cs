@@ -1,11 +1,11 @@
 ﻿using System;
 using Cassandra;
-using DomainEventsTodo.Dispatchers.Abstract;
-using DomainEventsTodo.Dispatchers.Concrete;
+using DomainEventsTodo.Dispatchers;
 using DomainEventsTodo.Domain;
 using DomainEventsTodo.Domain.Events;
+using DomainEventsTodo.Handlers;
+using DomainEventsTodo.Repositories;
 using DomainEventsTodo.Repositories.Abstract;
-using DomainEventsTodo.Repositories.Concrete;
 using DomainEventsTodo.SignalR;
 using DomainEventsTodo.Validators;
 using DomainEventsTodo.ViewModels;

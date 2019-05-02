@@ -28,7 +28,7 @@ namespace DomainEventsTodo.Validators
             RuleFor(t => t.Description).MaximumLength(MAX_DESCRIPTION_LENGTH)
                 .WithMessage(string.Format(Properties.Resource.ResourceManager.GetString("MaxLength"), nameof(TodoUpdateVm.Description), MAX_DESCRIPTION_LENGTH));
 
-            RuleFor(t => t.Description).Must(t => _repository.All().All(todo => todo.Memento.Description != t))
+            RuleFor(t => t.Description).Must(t => _repository.All().All(todo => todo.Description != t))
                 .WithMessage(string.Format(Properties.Resource.ResourceManager.GetString("NotUnique"), nameof(TodoUpdateVm.Description)));
         }
     }

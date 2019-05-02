@@ -1,4 +1,5 @@
 ﻿using DomainEventsTodo.Domain.Events;
+using DomainEventsTodo.Handlers;
 using DomainEventsTodo.SignalR;
 using Microsoft.AspNetCore.SignalR;
 
@@ -15,7 +16,7 @@ namespace DomainEventsTodo.Domain
 
         public void Handle(TodoComplete domainEvent)
         {
-            _notifier.Clients.All.InvokeAsync("Notify", domainEvent.Memento.Description + " is complete").Wait();
+            _notifier.Clients.All.InvokeAsync("Notify", domainEvent.Description + " is complete").Wait();
         }
     }
 }

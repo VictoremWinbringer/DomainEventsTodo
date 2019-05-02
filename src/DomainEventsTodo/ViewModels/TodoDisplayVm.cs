@@ -11,12 +11,11 @@ namespace DomainEventsTodo.ViewModels
 
         public static TodoDisplayVm FromTodo(Todo todo)
         {
-            var memento = todo.Memento;
             return new TodoDisplayVm
             {
-                Id = memento.Id,
-                Description = memento.Description,
-                IsComplete = memento.IsComplete
+                Id = todo.Id,
+                Description = todo.Description,
+                IsComplete = todo.IsComplete
             };
         }
     }

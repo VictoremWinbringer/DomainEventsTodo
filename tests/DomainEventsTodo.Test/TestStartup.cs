@@ -1,8 +1,8 @@
 ﻿using Cassandra;
-using DomainEventsTodo.Dispatchers.Abstract;
-using DomainEventsTodo.Dispatchers.Concrete;
+using DomainEventsTodo.Dispatchers;
 using DomainEventsTodo.Domain;
 using DomainEventsTodo.Domain.Events;
+using DomainEventsTodo.Handlers;
 using DomainEventsTodo.SignalR;
 using DomainEventsTodo.Validators;
 using DomainEventsTodo.ViewModels;

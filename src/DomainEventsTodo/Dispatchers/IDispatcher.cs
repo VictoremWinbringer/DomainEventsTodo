@@ -1,6 +1,6 @@
 ﻿using DomainEventsTodo.Domain.Events;
 
-namespace DomainEventsTodo.Dispatchers.Abstract
+namespace DomainEventsTodo.Dispatchers
 {
     public interface IDispatcher
     {

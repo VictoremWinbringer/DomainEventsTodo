@@ -1,14 +1,13 @@
-﻿using Cassandra;
-using DomainEventsTodo.Domain;
-using DomainEventsTodo.Repositories.Abstract;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using DomainEventsTodo.Dispatchers.Abstract;
+using Cassandra;
+using DomainEventsTodo.Dispatchers;
+using DomainEventsTodo.Domain;
 using DomainEventsTodo.Domain.Events;
-using DomainEventsTodo.Domain.Mementos;
+using DomainEventsTodo.Repositories.Abstract;
 
-namespace DomainEventsTodo.Repositories.Concrete
+namespace DomainEventsTodo.Repositories
 {
     internal sealed class TodoRepository : ITodoRepository
     {
@@ -38,22 +37,18 @@ namespace DomainEventsTodo.Repositories.Concrete
 
         public void Replace(Todo todo)
         {
-            var memento = todo.Memento;
-
             Execute(
-                "update todos set iscomplete =?, description =? where id =?;"/* IF EXISTS;" */
-                , memento.IsComplete, memento.Description, memento.Id);
+                "update todos set iscomplete =?, description =? where id =?;" /* IF EXISTS;" */
+                , todo.IsComplete, todo.Description, todo.Id);
 
             Dispatch(todo.Events);
         }
 
         public void Add(Todo todo)
         {
-            var memento = todo.Memento;
-
             Execute(
                 "insert into todos (id, description, iscomplete) values (?,?,?);"
-                , memento.Id, memento.Description, memento.IsComplete);
+                , todo.Id, todo.Description, todo.IsComplete);
 
             Dispatch(todo.Events);
         }
@@ -70,12 +65,11 @@ namespace DomainEventsTodo.Repositories.Concrete
 
         private Todo Create(Row row)
         {
-            return new Todo(new TodoMemento
-            {
-                Id = (Guid)row["id"],
-                Description = (string)row["description"],
-                IsComplete = (bool)row["iscomplete"]
-            });
+            return new Todo(
+                (Guid) row["id"],
+                (string) row["description"],
+                (bool) row["iscomplete"]
+                );
         }
 
         private Todo Get(Guid id)
